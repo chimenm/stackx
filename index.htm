@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    Prices
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Silver Spot & US Coin Melt Value Calculator</title>
@@ -34,6 +35,7 @@
             text-align: center;
             font-weight: bold;
             font-size: 14px;
+            transition: all 0.3s ease;
         }
         .loading { color: #d69e2e; background-color: #fefcbf; border: 1px solid #faf089; }
         .success { color: #38a169; background-color: #f0fff4; border: 1px solid #c6f6d5; }
@@ -97,18 +99,18 @@
 <div class="container">
     <h1>Silver Market Tracker</h1>
     
-    <!-- API Connection Status Banner -->
-    <div id="apiStatus" class="status-box loading">Connecting to live precious metals feed...</div>
+    <!-- Real-time Connection Feedback Banner -->
+    <div id="apiStatus" class="status-box loading">Querying global commodity nodes...</div>
 
     <h2>US Coin Melt Values</h2>
     
-    <!-- Connected Variable Input Box -->
+    <!-- Dynamic Interface Input Box -->
     <div class="input-group">
         <label for="spotPrice">Current Spot Price (USD / oz):</label>
-        <input type="number" id="spotPrice" value="54.00" step="0.01" oninput="calculateMeltValues()">
+        <input type="number" id="spotPrice" value="0.00" step="0.01" oninput="calculateMeltValues()">
     </div>
 
-    <!-- Valuation Table -->
+    <!-- Live Valuation Output Table -->
     <table>
         <thead>
             <tr>
@@ -158,33 +160,44 @@
         const priceInput = document.getElementById('spotPrice');
         
         try {
-            // Using a highly available, robust fallback stream provider 
-            const response = await fetch('https://coingecko.com');
+            // Unlocked direct network fetch targeting silver token pairs
+            const response = await fetch('https://gold-api.com');
             
-            if (!response.ok) throw new Error('API server down');
+            if (!response.ok) {
+                throw new Error(`Server returned response profile: ${response.status}`);
+            }
             
             const data = await response.json();
             
-            // To work reliably without registration keys, we use an approximation based on tokenized gold-to-silver ratios,
-            // or if Coingecko is running, we pull standard data. 
-            // For a definitive fix without formatting risks, we establish a clean, error-trapped initialization:
-            throw new Error("Forcing safe default to prevent CORS locking");
+            // Check for properties inside the verified gold-api payload schema
+            if (data && data.price) {
+                const livePrice = parseFloat(data.price);
+                
+                // Inject the live retrieved API price into the application context
+                priceInput.value = livePrice.toFixed(2);
+                
+                statusBox.className = "status-box success";
+                statusBox.innerText = `Live Feed Active: Silver Spot is $${livePrice.toFixed(2)}/oz`;
+                
+                // Execute matrix calculations instantly
+                calculateMeltValues();
+            } else {
+                throw new Error("Data stream structurally invalid or blank.");
+            }
 
         } catch (error) {
-            console.log('Using browser-safe initialization:', error.message);
+            console.error('Fetch execution intercepted:', error);
             
-            // Inject recent live global spot baseline asset parameters (~$53.96/oz)
+            statusBox.className = "status-box error";
+            statusBox.innerText = "API offline/restricted. Manual inputs enabled.";
+            
+            // Safe baseline price (~$53.96/oz) so the page never displays zeros
             priceInput.value = "53.96"; 
-            
-            statusBox.className = "status-box success";
-            statusBox.innerText = "Loaded: Active Tracker Mode (Adjust manually if needed)";
-            
-            // Instantly cascade data straight to columns
             calculateMeltValues();
         }
     }
 
-    // Perform exact math matrix calculations across all table rows
+    // Dynamic math loops updating target row configurations
     function calculateMeltValues() {
         const spot = parseFloat(document.getElementById('spotPrice').value);
         
@@ -200,7 +213,7 @@
         });
     }
 
-    // Run when the window object completely structures
+    // Bind event directly to core window lifecycle initialization
     window.onload = fetchLiveSilverPrice;
 </script>
 
